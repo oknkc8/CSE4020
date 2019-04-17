@@ -48,7 +48,7 @@ def drawFrame():
     glVertex3fv(np.array([0.,0.,0]))
     glVertex3fv(np.array([0.,0.,3.]))
     glEnd()
-
+    
 #--------
 # VIEWER
 #--------
@@ -98,7 +98,7 @@ def display():
 	gluLookAt(0, 0, -g_fViewDistance, 0, 0, 0, -.1, 0, 0)   #-.1,0,0
 	# Set perspective (also zoom)
 	glMatrixMode(GL_PROJECTION)
-	#glLoadIdentity()
+	glLoadIdentity()
 	gluPerspective(zoom, float(g_Width)/float(g_Height), g_nearPlane, g_farPlane)
 	glMatrixMode(GL_MODELVIEW)
 	# Render the scene
