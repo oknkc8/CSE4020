@@ -7,6 +7,9 @@ x_rotate = 0.
 y_rotate = 0.
 z_rotate = 0.
 
+x_angle = 45.
+y_angle = 36.264
+
 x_origin = 0.
 y_origin = 0.
 z_origin = 0.
@@ -16,7 +19,10 @@ scene_y_offset = 0.
 scene_x = 0.
 scene_y = 0.
 
-flag_press = False
+zoom = 45
+
+flag_left_press = False
+flag_right_press = False
 
 M = None
 
@@ -34,19 +40,57 @@ def drawFrame():
     glEnd()
 
 def cursor_callback(window, xpos, ypos):
-    if flag_press == True:
-        
+    global x_rotate, y_rotate
+    global scene_x_offset, scene_y_offset
+    global scene_x, scene_y
+    if flag_left_press == True:
+        x_rotate = xpos - scene_x
+        y_rotate = ypos - scene_y
+    elif flag_right_press == True:
+        scene_x_offset = xpos - scene_x
+        scene_y_offset = ypos - scene_y
+    scene_x = xpos
+    scene_y = ypos
+
 
 def button_callback(window, button, action, mod):
-    global flag_press
+    global flag_left_press, flag_right_press
     if button == glfw.MOUSE_BUTTON_LEFT:
         if action == glfw.PRESS:
-            flag_press = True
+            flag_left_press = True
         elif action == glfw.RELEASE:
-            flag_press = False
+            flag_left_press = False
+    elif button == glfw.MOUSE_BUTTON_RIGHT:
+        if action == glfw.PRESS:
+            flag_right_press = True
+        elif action == glfw.RELEASE:
+            flag_right_press = False
+            
 
 def scroll_callback(window, xoffset, yoffset):
-    
+    global zoom
+    zoom -= yoffset
+
+def render():
+    global x_angle, y_angle, x_rotate, y_rotate
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)     
+    glEnable(GL_DEPTH_TEST)     
+    glPolygonMode( GL_FRONT_AND_BACK, GL_LINE )     
+    glLoadIdentity() 
+
+    #gluPerspective(zoom, 1, 1, 10)
+
+    x_angle += x_rotate/10.
+    y_angle += y_rotate/10.
+    x_rotate = 0.
+    y_rotate = 0.
+    glRotatef(y_angle, 1, 0, 0)
+    glRotatef(-x_angle, 0, 1, 0)
+
+    #glTranslatef(-3, -3, -3)
+
+    drawFrame()
+
 
 def main():
     if not glfw.init():
@@ -58,7 +102,7 @@ def main():
     glfw.make_context_current(window)
     glfw.set_cursor_pos_callback(window, cursor_callback)
     glfw.set_mouse_button_callback(window, button_callback)
-    glfw.set_mouse_scroll_callback(window, scroll_callback)
+    glfw.set_scroll_callback(window, scroll_callback)
 
     # set the number of screen refresh to wait before calling glfw.swap_buffer().
     # if your monitor refresh rate is 60Hz, the while loop is repeated every 1/60 sec

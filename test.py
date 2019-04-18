@@ -103,7 +103,7 @@ def display():
 	glMatrixMode(GL_MODELVIEW)
 	# Render the scene
 	polarView()
-	scenemodel()
+	#scenemodel()
 	drawFrame()
 	# Make sure changes appear onscreen
 	glutSwapBuffers()
@@ -119,8 +119,9 @@ def reshape(width, height):
 def polarView():
     glTranslatef( yTrans/100., 0.0, 0.0 )
     glTranslatef(  0.0, -xTrans/100., 0.0)
-    glRotatef( zRotate, 0.0, 0.0, 1.0)
     glRotatef( xRotate, 1.0, 0.0, 0.0)
+    glRotatef( zRotate, 0.0, 0.0, 1.0)
+    
     glRotatef( yRotate, .0, 1.0, 0.0)
    
 
