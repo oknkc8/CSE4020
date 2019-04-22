@@ -78,16 +78,17 @@ def render():
     glPolygonMode( GL_FRONT_AND_BACK, GL_LINE )     
     glLoadIdentity() 
 
-    #gluPerspective(zoom, 1, 1, 10)
+    gluPerspective(zoom, 1, 1, 10)
 
-    x_angle += x_rotate/10.
-    y_angle += y_rotate/10.
+    x_angle -= x_rotate
+    y_angle += y_rotate
     x_rotate = 0.
     y_rotate = 0.
+    #glTranslatef(scene_x_offset)
     glRotatef(y_angle, 1, 0, 0)
     glRotatef(-x_angle, 0, 1, 0)
 
-    #glTranslatef(-3, -3, -3)
+    glTranslatef(-1, -1, -1)
 
     drawFrame()
 
@@ -95,7 +96,7 @@ def render():
 def main():
     if not glfw.init():
         return
-    window = glfw.create_window(640, 640, "2017029807-simple-viewer", None, None)
+    window = glfw.create_window(1000, 1000, "2017029807-simple-viewer", None, None)
     if not window:
         glfw.terminate()
         return
