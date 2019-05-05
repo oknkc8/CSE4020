@@ -3,23 +3,23 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 import numpy as np
 
-x_rotate = 0.
-y_rotate = 0.
+y_rotate = 0
+x_rotate = 0
 z_rotate = 0.
 
-x_angle = 45.
-y_angle = 36.264
-
-x_origin = 0.
-y_origin = 0.
-z_origin = 0.
-
-scene_x_offset = 0.
-scene_y_offset = 0.
+scene_x_pos = 0.
+scene_y_pos = 0.
 scene_x = 0.
 scene_y = 0.
 
-zoom = 45
+g_fViewDistance = 9.
+g_Width = 600
+g_Height = 600
+
+g_nearPlane = 1.
+g_farPlane = 1000.
+
+zoom = 10.
 
 flag_left_press = False
 flag_right_press = False
@@ -39,16 +39,26 @@ def drawFrame():
     glVertex3fv(np.array([0.,0.,1.]))
     glEnd()
 
+def drawXZ():
+    glBegin(GL_LINES)
+    glColor3ub(255, 255, 255)
+    for i in range(-5,6):
+        glVertex3fv(np.array([i,0,5]))
+        glVertex3fv(np.array([i,0,-5]))
+        glVertex3fv(np.array([5,0,i]))
+        glVertex3fv(np.array([-5,0,i]))
+    glEnd()
+
 def cursor_callback(window, xpos, ypos):
     global x_rotate, y_rotate
-    global scene_x_offset, scene_y_offset
+    global scene_x_pos, scene_y_pos
     global scene_x, scene_y
     if flag_left_press == True:
-        x_rotate = xpos - scene_x
-        y_rotate = ypos - scene_y
+        x_rotate += xpos - scene_x
+        y_rotate += ypos - scene_y
     elif flag_right_press == True:
-        scene_x_offset = xpos - scene_x
-        scene_y_offset = ypos - scene_y
+        scene_x_pos -= xpos - scene_x
+        scene_y_pos -= ypos - scene_y
     scene_x = xpos
     scene_y = ypos
 
@@ -72,31 +82,42 @@ def scroll_callback(window, xoffset, yoffset):
     zoom -= yoffset
 
 def render():
-    global x_angle, y_angle, x_rotate, y_rotate
+    global x_rotate, y_rotate
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)     
     glEnable(GL_DEPTH_TEST)     
     glPolygonMode( GL_FRONT_AND_BACK, GL_LINE )     
     glLoadIdentity() 
+    gluLookAt(0, 0, -g_fViewDistance, 0, 0, 0, 0., .1, 0)
+	# Set perspective (also zoom)
+    glMatrixMode(GL_PROJECTION)
+    glLoadIdentity()
+    gluPerspective(zoom, float(g_Width)/float(g_Height), g_nearPlane, g_farPlane)
+    glMatrixMode(GL_MODELVIEW)
 
-    gluPerspective(zoom, 1, 1, 10)
+    #glLoadIdentity()
+    #glPushMatrix()
+    glTranslatef(scene_x_pos/500., 0., 0.)
+    glTranslatef(0., scene_y_pos/500., 0.)
 
-    x_angle -= x_rotate
-    y_angle += y_rotate
-    x_rotate = 0.
-    y_rotate = 0.
-    #glTranslatef(scene_x_offset)
-    glRotatef(y_angle, 1, 0, 0)
-    glRotatef(-x_angle, 0, 1, 0)
-
-    glTranslatef(-1, -1, -1)
+    #glPopMatrix()
+    glRotatef(y_rotate/2., 1., 0., 0.)
+    glRotatef(x_rotate/2., 0., 1., 0.)
+    
 
     drawFrame()
+    drawXZ()
+    #drawCube()
 
+def size_callback(window, width, height):
+    global g_Width, g_Height
+    g_Width = width
+    g_Height = height
+    glViewport(0, 0, g_Width, g_Height)
 
 def main():
     if not glfw.init():
         return
-    window = glfw.create_window(1000, 1000, "2017029807-simple-viewer", None, None)
+    window = glfw.create_window(640, 640, "2017029807-simple-viewer", None, None)
     if not window:
         glfw.terminate()
         return
@@ -104,6 +125,7 @@ def main():
     glfw.set_cursor_pos_callback(window, cursor_callback)
     glfw.set_mouse_button_callback(window, button_callback)
     glfw.set_scroll_callback(window, scroll_callback)
+    glfw.set_framebuffer_size_callback(window, size_callback)
 
     # set the number of screen refresh to wait before calling glfw.swap_buffer().
     # if your monitor refresh rate is 60Hz, the while loop is repeated every 1/60 sec
