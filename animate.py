@@ -137,7 +137,7 @@ def size_callback(window, width, height):
 def main():
     if not glfw.init():
         return
-    window = glfw.create_window(640, 640, "2017029807-simple-viewer", None, None)
+    window = glfw.create_window(640, 640, "2017029807-animate-runner", None, None)
     if not window:
         glfw.terminate()
         return
