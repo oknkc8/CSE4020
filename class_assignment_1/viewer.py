@@ -16,7 +16,7 @@ g_fViewDistance = 9.
 g_Width = 600
 g_Height = 600
 
-g_nearPlane = 30
+g_nearPlane = 5
 g_farPlane = 1000.
 
 zoom = 50.
@@ -24,7 +24,9 @@ zoom = 50.
 flag_left_press = False
 flag_right_press = False
 
-M = None
+M = np.identity(4)
+#rotate_M = np.identity(4)
+#translate_M = np.identity(4)
 
 def drawFrame():
     glBegin(GL_LINES)
@@ -76,7 +78,7 @@ def drawRunner():
     glColor3ub(255, 255, 255)
     # draw body
     glPushMatrix()
-    glTranslatef(0,np.sin(7*t)*0.1,0)
+    glTranslatef(0,np.sin(7*t)*0.1+3,0)
     drawSphere(30,30,2,.3,.8,.3)
     
     # draw head
@@ -163,15 +165,39 @@ def cursor_callback(window, xpos, ypos):
     global x_rotate, y_rotate
     global scene_x_pos, scene_y_pos
     global scene_x, scene_y
+    global M
     if flag_left_press == True:
-        x_rotate += xpos - scene_x
-        y_rotate += ypos - scene_y
+        x_rotate = xpos - scene_x
+        y_rotate = ypos - scene_y
+        
+        angleC = np.cos(x_rotate*np.pi/180)
+        angleS = np.sin(x_rotate*np.pi/180)
+        rotate_x_M = np.array([[angleC, 0, angleS, 0],
+                                [0, 1, 0, 0],
+                                [-angleS, 0, angleC, 0],
+                                [0, 0, 0, 1]])
+
+        angleC = np.cos(-y_rotate*np.pi/180)
+        angleS = np.sin(-y_rotate*np.pi/180)
+        rotate_y_M = np.array([[1, 0, 0, 0],
+                  [0, angleC, -angleS, 0],
+                  [0, angleS, angleC, 0],
+                  [0, 0, 0, 1]])
+        
+        M = rotate_y_M @ M
+        M = rotate_x_M @ M
+
     elif flag_right_press == True:
-        scene_x_pos -= xpos - scene_x
-        scene_y_pos -= ypos - scene_y
+        scene_x_pos = xpos - scene_x
+        scene_y_pos = ypos - scene_y
+        translate_M = np.array([[1, 0, 0, -scene_x_pos/100],
+                                [0, 1, 0, -scene_y_pos/100],
+                                [0, 0, 1, 0],
+                                [0, 0, 0, 1]])
+        M = translate_M @ M
+    
     scene_x = xpos
     scene_y = ypos
-
 
 def button_callback(window, button, action, mod):
     global flag_left_press, flag_right_press
@@ -192,7 +218,7 @@ def scroll_callback(window, xoffset, yoffset):
     zoom -= yoffset
 
 def render():
-    global x_rotate, y_rotate
+    global M
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)     
     glEnable(GL_DEPTH_TEST)     
     glPolygonMode( GL_FRONT_AND_BACK, GL_LINE )     
@@ -205,11 +231,7 @@ def render():
     glTranslatef(0., 0., -30)
     glMatrixMode(GL_MODELVIEW)
 
-    glTranslatef(scene_x_pos/100., 0., 0.)
-    glTranslatef(0., scene_y_pos/100., 0.)
-
-    glRotatef(y_rotate/2., 1., 0., 0.)
-    glRotatef(x_rotate/2., 0., 1., 0.)    
+    glMultMatrixf(np.transpose(M))
 
     drawFrame()
     drawXZ()
