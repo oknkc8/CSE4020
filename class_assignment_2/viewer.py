@@ -19,7 +19,7 @@ g_Height = 600
 g_nearPlane = 5
 g_farPlane = 1000.
 
-zoom = 30.
+zoom = 3.
 
 flag_left_press = False
 flag_right_press = False
@@ -98,8 +98,8 @@ def cursor_callback(window, xpos, ypos):
                                 [-angleS, 0, angleC, 0],
                                 [0, 0, 0, 1]])
 
-        angleC = np.cos(-y_rotate*np.pi/180)
-        angleS = np.sin(-y_rotate*np.pi/180)
+        angleC = np.cos(y_rotate*np.pi/180)
+        angleS = np.sin(y_rotate*np.pi/180)
         rotate_y_M = np.array([[1, 0, 0, 0],
                   [0, angleC, -angleS, 0],
                   [0, angleS, angleC, 0],
@@ -111,7 +111,7 @@ def cursor_callback(window, xpos, ypos):
     elif flag_right_press == True:
         scene_x_pos = xpos - scene_x
         scene_y_pos = ypos - scene_y
-        translate_M = np.array([[1, 0, 0, -scene_x_pos/100],
+        translate_M = np.array([[1, 0, 0, scene_x_pos/100],
                                 [0, 1, 0, -scene_y_pos/100],
                                 [0, 0, 1, 0],
                                 [0, 0, 0, 1]])
@@ -173,6 +173,7 @@ def parse_obj():
     normal_arr = np.array([[0,0,0]],'float32')
     face_arr = np.array([[[0,0,0],[0,0,0],[0,0,0]]])
 
+    sum_x = sum_y = sum_z = 0.
     for line in lines:
         # comment
         if line.startswith('#'): 
@@ -184,17 +185,23 @@ def parse_obj():
 
         if val[0] == 'v':
             tmp_v = np.array([[float(val[1]), float(val[2]), float(val[3])]], 'float32')
+            sum_x+=float(val[1])
+            sum_y+=float(val[2])
+            sum_z+=float(val[3])
             vertex_arr = np.append(vertex_arr, tmp_v, axis=0)
             count_v_f.append([])
         elif val[0] == 'vn':
             tmp_vn = np.array([[float(val[1]), float(val[2]), float(val[3])]], 'float32')
             normal_arr = np.append(normal_arr, tmp_vn, axis=0)
         elif val[0] == 'f':
-            if len(val) == 3:
+            if val[len(val)-1] == '\n':
+                val = np.delete(val, len(val)-1, 0)
+
+            if len(val) == 4:
                 count_3_v += 1
-            elif len(val) == 4:
+            elif len(val) == 5:
                 count_4_v += 1
-            elif len(val) > 4:
+            elif len(val) > 5:
                 count_m4_v += 1
 
             v1 = val[1].split('/')
@@ -227,6 +234,14 @@ def parse_obj():
             continue
 
     vertex_arr = np.delete(vertex_arr, 0, 0)
+    sum_x /= len(vertex_arr)
+    sum_y /= len(vertex_arr)
+    sum_z /= len(vertex_arr)
+    for i in range(len(vertex_arr)):
+        vertex_arr[i][0] -= sum_x
+        vertex_arr[i][1] -= sum_y
+        vertex_arr[i][2] -= sum_z
+
     normal_arr = np.delete(normal_arr, 0, 0)
     face_arr = np.delete(face_arr, 0, 0)
     index_arr = np.delete(index_arr, 0, 0)
@@ -303,12 +318,12 @@ def render():
     glEnable(GL_DEPTH_TEST)     
     glPolygonMode( GL_FRONT_AND_BACK, GL_LINE )     
     glLoadIdentity() 
-    gluLookAt(0, 0, -g_fViewDistance, 0, 0, 0, 0., .1, 0)
+    gluLookAt(0, 0, g_fViewDistance, 0, 0, 0, 0., .1, 0)
 	
     glMatrixMode(GL_PROJECTION)
     glLoadIdentity()
     gluPerspective(zoom, float(g_Width)/float(g_Height), g_nearPlane, g_farPlane)
-    glTranslatef(0., 0., -30)
+    glTranslatef(0., 0., -500)
     glMatrixMode(GL_MODELVIEW)
 
     glMultMatrixf(np.transpose(M))
@@ -327,19 +342,19 @@ def render():
     glEnable(GL_LIGHT1)
 
     glEnable(GL_RESCALE_NORMAL)  # try to uncomment: lighting will be incorrect if you scale the object
-
+    
     # light intensity for each color channel
-    lightColor = (1.,0.,1.,1.)
+    lightColor = (1.,0.,0.,1.)
     ambientLightColor = (.1,.1,.1,1.)
-    lightPos = (4.,6.,4.,1.)
+    lightPos = (10.,10.,10.,1.)
     glLightfv(GL_LIGHT0, GL_DIFFUSE, lightColor)
     glLightfv(GL_LIGHT0, GL_SPECULAR, lightColor)
     glLightfv(GL_LIGHT0, GL_AMBIENT, ambientLightColor)
     glLightfv(GL_LIGHT1, GL_POSITION, lightPos)
-
+    
     lightColor = (0.,0.,1.,1.)
     ambientLightColor = (.1,.1,.1,1.)
-    lightPos = (-5.,6.,3.,1.)
+    lightPos = (-5.,-6.,-3.,1.)
     glLightfv(GL_LIGHT1, GL_DIFFUSE, lightColor)
     glLightfv(GL_LIGHT1, GL_SPECULAR, lightColor)
     glLightfv(GL_LIGHT1, GL_AMBIENT, ambientLightColor)
@@ -372,7 +387,7 @@ def render():
 def main():
     if not glfw.init():
         return
-    window = glfw.create_window(640, 640, "2017029807-simple-viewer", None, None)
+    window = glfw.create_window(640, 640, "2017029807-obj-viewer", None, None)
     if not window:
         glfw.terminate()
         return
