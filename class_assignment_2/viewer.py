@@ -234,6 +234,8 @@ def parse_obj():
             continue
 
     vertex_arr = np.delete(vertex_arr, 0, 0)
+    # move to origin
+    '''
     sum_x /= len(vertex_arr)
     sum_y /= len(vertex_arr)
     sum_z /= len(vertex_arr)
@@ -241,6 +243,7 @@ def parse_obj():
         vertex_arr[i][0] -= sum_x
         vertex_arr[i][1] -= sum_y
         vertex_arr[i][2] -= sum_z
+    '''
 
     normal_arr = np.delete(normal_arr, 0, 0)
     face_arr = np.delete(face_arr, 0, 0)
@@ -354,7 +357,7 @@ def render():
     
     lightColor = (0.,0.,1.,1.)
     ambientLightColor = (.1,.1,.1,1.)
-    lightPos = (-5.,-6.,-3.,1.)
+    lightPos = (-5.,-6.,-3.,0.)
     glLightfv(GL_LIGHT1, GL_DIFFUSE, lightColor)
     glLightfv(GL_LIGHT1, GL_SPECULAR, lightColor)
     glLightfv(GL_LIGHT1, GL_AMBIENT, ambientLightColor)
